@@ -6,6 +6,7 @@ use App\Http\Resources\ProductResource;
 use App\Http\Resources\ProductsResource;
 use App\Product;
 use App\Traits\FileHandlerTrait;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -14,9 +15,10 @@ class ProductController extends ApiController
 {
     use FileHandlerTrait;
 
-    protected $produt;
+    protected $product;
 
     /**
+     * ProductController constructor.
      * Create a new controller instance.
      */
     public function __construct(Request $request)
@@ -25,10 +27,10 @@ class ProductController extends ApiController
     }
 
     /**
-     * Store a new product.
+     * Get product List.
      *
      * @param Request $request
-     * @return Response
+     * @return JsonResponse
      */
     public function index()
     {
@@ -49,6 +51,12 @@ class ProductController extends ApiController
         }
     }
 
+    /**
+     * Store a new product.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function store(Request $request)
     {
         //validate incoming request
@@ -91,6 +99,12 @@ class ProductController extends ApiController
         }
     }
 
+    /**
+     * Get product details.
+     *
+     * @param int $id
+     * @return JsonResponse
+     */
     public function show($id)
     {
         try {
@@ -111,6 +125,12 @@ class ProductController extends ApiController
         }
     }
 
+    /**
+     * Get product edit details.
+     *
+     * @param int $id
+     * @return JsonResponse
+     */
     public function edit($id)
     {
         try {
@@ -130,6 +150,13 @@ class ProductController extends ApiController
         }
     }
 
+    /**
+     * update product.
+     *
+     * @param $id
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function update(Request $request, $id)
     {
         //validate incoming request
@@ -177,6 +204,12 @@ class ProductController extends ApiController
         }
     }
 
+    /**
+     * delete product
+     *
+     * @param $id
+     * @return JsonResponse
+     */
     public function delete($id)
     {
         try {
@@ -199,6 +232,12 @@ class ProductController extends ApiController
         }
     }
 
+    /**
+     * delete image
+     *
+     * Private Method
+     * @param string $fileName
+     */
     private function deleteImage($fileName)
     {
         if (file_exists(config('siteConfig.upload_dir') . $fileName)) {

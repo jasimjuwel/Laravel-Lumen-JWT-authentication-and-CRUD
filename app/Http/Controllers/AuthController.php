@@ -181,7 +181,7 @@ class AuthController extends ApiController
      * @param Request $token
      * Respond with token user data.
      * Private Method
-     * @return Array
+     * @return array
      */
 
     private function respondWithToken($token)
