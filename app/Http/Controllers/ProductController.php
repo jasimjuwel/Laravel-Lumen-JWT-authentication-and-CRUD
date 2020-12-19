@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\ProductResource;
+use App\Http\Resources\ProductsResource;
 use App\Product;
 use App\Traits\FileHandlerTrait;
 use Illuminate\Http\Request;
@@ -12,6 +14,16 @@ class ProductController extends ApiController
 {
     use FileHandlerTrait;
 
+    protected $produt;
+
+    /**
+     * Create a new controller instance.
+     */
+    public function __construct(Request $request)
+    {
+        $this->product = new Product;
+    }
+
     /**
      * Store a new product.
      *
@@ -21,12 +33,12 @@ class ProductController extends ApiController
     public function index()
     {
         try {
-            $prodctsList = Product::orderBy('id', 'asc')->get();
+            $prodctsList = $this->product->orderBy('id', 'asc')->get();
 
             $this->response = [
                 'status' => true,
                 'message' => 'Product List',
-                'data' => $prodctsList
+                'data' => new ProductsResource($prodctsList),
             ];
 
             return $this->responseSuccess($this->response);
@@ -54,20 +66,13 @@ class ProductController extends ApiController
         }
 
         try {
-            $product = new Product;
+            $product = $this->product;
             $product->title = $request->title;
             $product->description = $request->description;
             $product->price = $request->price;
             $product->image = $request->image;
             if ($request->hasFile('image')) {
-                $fileName = $this->processImage($request, 'image', 'User/', 413, 531, [
-                    [
-                        'path' => 'thumbnails/',
-                        'width' => 50,
-                        'height' => 50,
-                        'crop_resize' => 'resize'
-                    ]
-                ], 'resize');
+                $fileName = $this->processImage($request, 'image', 'User/', 413, 531, 'resize');
                 $product['image'] = $fileName;
             }
             $product->save();
@@ -75,7 +80,7 @@ class ProductController extends ApiController
             $this->response = [
                 'status' => true,
                 'message' => 'Product Created',
-                'data' => $product
+                'data' => new ProductResource($product),
             ];
 
             return $this->responseSuccess($this->response);
@@ -86,15 +91,15 @@ class ProductController extends ApiController
         }
     }
 
-    public function show(Product $product)
+    public function show($id)
     {
         try {
-            $data = $product->first();
+            $data = $this->product->findOrFail($id);
 
             $this->response = [
                 'status' => true,
                 'message' => 'Product Details',
-                'data' => $data
+                'data' => new ProductResource($data),
             ];
 
             return $this->responseSuccess($this->response);
@@ -106,15 +111,15 @@ class ProductController extends ApiController
         }
     }
 
-    public function edit(Product $product)
+    public function edit($id)
     {
         try {
-            $data = $product->first();
+            $data = $this->product->findOrFail($id);
 
             $this->response = [
                 'status' => true,
                 'message' => 'Product Details',
-                'data' => $data
+                'data' => new ProductResource($data),
             ];
 
             return $this->responseSuccess($this->response);
@@ -142,25 +147,16 @@ class ProductController extends ApiController
         }
 
         try {
-            $product = Product::findOrFail($id);
+            $product = $this->product->findOrFail($id);
 
             $product->title = $request->title;
             $product->description = $request->description;
             $product->price = $request->price;
 
             if ($request->hasFile('image')) {
-                if (file_exists(config('siteConfig.upload_dir') . $product->image)) {
-                    unlink(config('siteConfig.upload_dir') . $product->image);
-                }
+                $this->deleteImage($product->image);
 
-                $fileName = $this->processImage($request, 'image', 'User/', 413, 531, [
-                    [
-                        'path' => 'thumbnails/',
-                        'width' => 50,
-                        'height' => 50,
-                        'crop_resize' => 'resize'
-                    ]
-                ], 'resize');
+                $fileName = $this->processImage($request, 'image', 'User/', 413, 531, 'resize');
                 $product->image = $fileName;
             }
 
@@ -169,7 +165,7 @@ class ProductController extends ApiController
             $this->response = [
                 'status' => true,
                 'message' => 'Product Updated',
-                'data' => $product
+                'data' => new ProductResource($product),
             ];
 
             return $this->responseSuccess($this->response);
@@ -184,7 +180,8 @@ class ProductController extends ApiController
     public function delete($id)
     {
         try {
-            $product = Product::findOrFail($id);
+            $product = $this->product->findOrFail($id);
+            $this->deleteImage($product->image);
             $product->delete();
 
             $this->response = [
@@ -199,6 +196,13 @@ class ProductController extends ApiController
             Log::error($e->getMessage());
 
             return $this->responseInternalError(trans('api.ERROR'));
+        }
+    }
+
+    private function deleteImage($fileName)
+    {
+        if (file_exists(config('siteConfig.upload_dir') . $fileName)) {
+            unlink(config('siteConfig.upload_dir') . $fileName);
         }
     }
 }

@@ -31,13 +31,14 @@ trait FileHandlerTrait
      *
      * @return null|string
      */
-    protected function processImage(Request $request, $key, $path, $width, $height, $thumbDetails = [], $crop_resize = false)
+    protected function processImage(Request $request, $key, $path, $width, $height, $crop_resize = false)
     {
         try {
 
             $fileName = null;
 
             if ($request->hasFile($key)) {
+
                 $fileName = uniqid() . Str::random(5) . time() . '.' . $request->file($key)->getClientOriginalExtension();
 
                 if (!$this->isReallyImage($request->file($key)->getClientOriginalExtension())) {
@@ -45,63 +46,25 @@ trait FileHandlerTrait
                     return null;
                 }
 
+                $image_thumb = Image::make($request->file($key));
+
                 if ($crop_resize) {
                     if ($crop_resize === 'crop') {
-                        $image_thumb = Image::make($request->file($key))->crop($width, $height);
+                        $image_thumb->crop($width, $height);
                     } elseif ($crop_resize === 'resize') {
-                        $image_thumb = Image::make($request->file($key))->resize($width, $height);
+                        $image_thumb->resize($width, $height);
                     } elseif ($crop_resize === 'both') {
-                        $image_thumb = Image::make($request->file($key))
-                            ->crop($width, $height)
+                        $image_thumb->crop($width, $height)
                             ->resize($width, $height);
                     } else {
                         throw new \Exception('Wrong parameter for resize and crop action.');
                     }
-
-                } else {
-                    $image_thumb = Image::make($request->file($key));
                 }
-
-                $image_thumb = $image_thumb->stream();
 
                 $destinationPath = config('siteConfig.upload_dir') . $path; // upload path
                 File::makeDirectory($destinationPath, 0777, true, true);
-                $request->file('image')->move($destinationPath, $path . $fileName);
-                //config('siteConfig.upload_dir').$path . $fileName;
+                $image_thumb->save($destinationPath . $fileName);
 
-                //Storage::disk('public')->put($path . $fileName, $image_thumb->__toString(), 'public');
-
-                /*if (count($thumbDetails) > 0) {
-                    foreach ($thumbDetails as $thumb) {
-                        if ($thumb['crop_resize']) {
-                            if ($thumb['crop_resize'] === 'crop') {
-                                $thumbFile = Image::make($request->file($key))
-                                    ->crop($thumb['width'], $thumb['height']);
-
-                            } elseif ($thumb['crop_resize'] === 'resize') {
-                                $thumbFile = Image::make($request->file($key))
-                                    ->resize($thumb['width'], $thumb['height']);
-
-                            } elseif ($thumb['crop_resize'] === 'both') {
-
-                                $thumbFile = Image::make($request->file($key))
-                                    ->crop($thumb['width'], $thumb['height'])
-                                    ->resize($thumb['width'], $thumb['height']);
-                            } else {
-                                throw new \Exception('Wrong parameter in thumbnail for resize and crop action.');
-                            }
-
-                        } else {
-                            $thumbFile = Image::make($request->file($key));
-                        }
-                        $thumbFile = $thumbFile->stream();
-
-                        config('siteConfig.upload_dir').$path .$thumb['path']. $fileName;
-                        //Storage::disk('public')->put($path . $thumb['path'] . $fileName, $thumbFile->__toString(), 'public');
-                    }
-                }*/
-
-                //return config('filesystems.disks.public.url') . $path . $fileName;
                 return $path . $fileName;
             }
 
@@ -109,6 +72,7 @@ trait FileHandlerTrait
 
         } catch (\Exception $e) {
             Log::error($e);
+
             return null;
         }
     }
@@ -116,8 +80,10 @@ trait FileHandlerTrait
     protected function isReallyImage($extension)
     {
         if (in_array(strtolower($extension), ['jpg', 'jpeg', 'png'])) {
+
             return true;
         }
+
         return false;
     }
 }

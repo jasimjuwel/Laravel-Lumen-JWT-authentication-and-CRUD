@@ -41,7 +41,7 @@ $app->configure('siteConfig');
 
 $app->singleton(
     Illuminate\Contracts\Debug\ExceptionHandler::class,
-    App\Exceptions\Handler::class
+    App\Exceptions\AppHelper::class
 );
 
 $app->singleton(
@@ -103,6 +103,9 @@ $app->register(Chuckrincon\LumenConfigDiscover\DiscoverServiceProvider::class);
 $app->register(\Rap2hpoutre\LaravelLogViewer\LaravelLogViewerServiceProvider::class);
 $app->register(Flipbox\LumenGenerator\LumenGeneratorServiceProvider::class);
 $app->register(Intervention\Image\ImageServiceProviderLumen::class);
+$app->register(Barryvdh\LaravelIdeHelper\IdeHelperServiceProvider::class);
+
+
 
 //$app->register('Nord\Lumen\Cors\CorsServiceProvider');
 
